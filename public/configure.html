@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simkl Sync – Stremio Addon</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #0f0f0f;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .logo-img {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+    }
+
+    .logo-plus {
+      font-size: 1.5rem;
+      color: #555;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #888;
+      line-height: 1.5;
+      margin-bottom: 2rem;
+    }
+
+    /* How-it-works steps */
+    .steps {
+      text-align: left;
+      background: #111;
+      border-radius: 10px;
+      padding: 1.2rem 1.4rem;
+      margin-bottom: 2rem;
+      list-style: none;
+      counter-reset: step;
+    }
+
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.4rem 0;
+      font-size: 0.85rem;
+      color: #bbb;
+      line-height: 1.4;
+    }
+
+    .steps li::before {
+      content: counter(step);
+      min-width: 22px;
+      height: 22px;
+      background: #7c3aed;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.75rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover { opacity: 0.85; }
+
+    .btn-simkl {
+      background: #00a6ed;
+      color: #fff;
+      width: 100%;
+    }
+
+    .btn-stremio {
+      background: #7c3aed;
+      color: #fff;
+    }
+
+    .btn-copy {
+      background: #2a2a2a;
+      color: #ccc;
+      border: 1px solid #3a3a3a;
+      font-size: 0.85rem;
+      padding: 0.6rem 1rem;
+    }
+
+    /* Sections toggled by JS */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* URL display */
+    .url-box {
+      display: flex;
+      gap: 0.5rem;
+      margin: 1rem 0 1.5rem;
+      align-items: stretch;
+    }
+
+    .url-box input {
+      flex: 1;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #aaa;
+      font-size: 0.8rem;
+      padding: 0.6rem 0.75rem;
+      font-family: monospace;
+      min-width: 0;
+    }
+
+    .url-box input:focus { outline: none; border-color: #555; }
+
+    /* Alert boxes */
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+
+    .alert-error {
+      background: #2a1010;
+      border: 1px solid #6b2020;
+      color: #f87171;
+    }
+
+    .alert-success {
+      background: #0a2a1a;
+      border: 1px solid #1a6b3a;
+      color: #4ade80;
+    }
+
+    .user-badge {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 1rem;
+    }
+
+    .user-badge strong { color: #ccc; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #2a2a2a;
+      margin: 1.5rem 0;
+    }
+
+    .note {
+      font-size: 0.78rem;
+      color: #555;
+      line-height: 1.5;
+      margin-top: 1rem;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <!-- Logo row -->
+  <div class="logo-row">
+    <img
+      class="logo-img"
+      src="https://www.stremio.com/website/stremio-logo-small.png"
+      alt="Stremio"
+      onerror="this.style.display='none'"
+    />
+    <span class="logo-plus">+</span>
+    <img
+      class="logo-img"
+      src="https://simkl.in/img/simkl/facebook-logo.png"
+      alt="Simkl"
+      onerror="this.style.display='none'"
+    />
+  </div>
+
+  <h1>Simkl Sync</h1>
+  <p class="subtitle">Automatically track what you watch in Stremio on your Simkl profile.</p>
+
+  <!-- ── Connect section (default) ── -->
+  <div id="connect-section" class="section active">
+
+    <ol class="steps">
+      <li>Click <strong>Connect to Simkl</strong> and authorise the app.</li>
+      <li>You'll receive a personal addon install link.</li>
+      <li>Install it in Stremio and enjoy automatic scrobbling.</li>
+    </ol>
+
+    <a href="/auth/login" class="btn btn-simkl">Connect to Simkl</a>
+
+    <p class="note">
+      Your Simkl credentials are only stored on this server.<br />
+      The install link contains an opaque token – not your actual password.
+    </p>
+  </div>
+
+  <!-- ── Success section ── -->
+  <div id="success-section" class="section">
+    <div class="alert alert-success">Connected successfully!</div>
+
+    <div id="user-badge" class="user-badge">Logged in as <strong id="user-name"></strong></div>
+
+    <p style="font-size:0.85rem; color:#aaa; margin-bottom:0.25rem;">
+      Your personal Stremio install link:
+    </p>
+    <div class="url-box">
+      <input id="manifest-url" type="text" readonly />
+      <button class="btn btn-copy" onclick="copyUrl()">Copy</button>
+    </div>
+
+    <div class="action-row">
+      <a id="stremio-web-link" href="#" class="btn btn-stremio" target="_blank">
+        Install in Stremio
+      </a>
+      <a href="/configure" class="btn btn-copy">← Back</a>
+    </div>
+
+    <hr class="divider" />
+
+    <p class="note">
+      <strong style="color:#ccc">How playback scrobbling works:</strong><br />
+      This addon registers as a subtitle provider. Whenever Stremio starts
+      playing a movie or episode, it calls this addon to fetch subtitles.
+      That request is used as the "watch" signal, and the item is immediately
+      marked as watched on your Simkl account.
+    </p>
+  </div>
+
+  <!-- ── Error section ── -->
+  <div id="error-section" class="section">
+    <div class="alert alert-error">
+      <strong>Authentication failed.</strong><br />
+      <span id="error-message">Please try again.</span>
+    </div>
+    <a href="/configure" class="btn btn-simkl">Try Again</a>
+  </div>
+
+</div>
+
+<script>
+  const params = new URLSearchParams(location.search);
+
+  function show(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  if (params.get('success') === '1') {
+    const manifestUrl = params.get('manifest') || '';
+    const user = params.get('user') || '';
+
+    document.getElementById('manifest-url').value = manifestUrl;
+    document.getElementById('user-name').textContent = user || 'your account';
+
+    if (!user) document.getElementById('user-badge').style.display = 'none';
+
+    // Stremio web install URL
+    const installUrl =
+      'https://web.stremio.com/#/addons?addon=' + encodeURIComponent(manifestUrl);
+    document.getElementById('stremio-web-link').href = installUrl;
+
+    show('success-section');
+
+  } else if (params.get('error')) {
+    const msg = params.get('error');
+    document.getElementById('error-message').textContent =
+      msg === 'auth_failed'
+        ? 'Could not exchange the authorization code. Check your SIMKL_CLIENT_SECRET.'
+        : msg;
+    show('error-section');
+  }
+
+  function copyUrl() {
+    const input = document.getElementById('manifest-url');
+    input.select();
+    navigator.clipboard.writeText(input.value).catch(() => {
+      document.execCommand('copy');
+    });
+    const btn = document.querySelector('.btn-copy');
+    btn.textContent = 'Copied!';
+    setTimeout(() => (btn.textContent = 'Copy'), 1500);
+  }
+</script>
+</body>
+</html>
