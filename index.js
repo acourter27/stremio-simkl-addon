@@ -221,7 +221,7 @@ addonRouter.get('/subtitles/:type/:id/:extra?.json', (req, res) => {
  *
  * We return an empty list so we never interfere with other stream addons.
  */
-addonRouter.get('/streams/:type/:id/:extra?.json', (req, res) => {
+addonRouter.get('/stream/:type/:id/:extra?.json', (req, res) => {
   res.json({ streams: [] });
 
   syncToSimkl(req.params).catch((err) =>
