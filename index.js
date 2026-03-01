@@ -60,7 +60,7 @@ const BASE_URL = (process.env.BASE_URL || `http://localhost:${PORT}`).replace(/\
 
 const MANIFEST = {
   id: 'community.stremio-simkl-sync',
-  version: '1.0.3',
+  version: '1.1.0',
   name: 'Simkl Sync',
   description:
     'Automatically marks movies and episodes as watched on Simkl when you play them in Stremio.',
