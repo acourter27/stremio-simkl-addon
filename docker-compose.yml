@@ -1,0 +1,21 @@
+services:
+  addon:
+    build: .
+    restart: unless-stopped
+    expose:
+      - "7000"
+    volumes:
+      - addon-data:/data
+    environment:
+      PORT: 7000
+      BASE_URL: ${BASE_URL:-http://localhost:7000}
+      SIMKL_CLIENT_ID: ${SIMKL_CLIENT_ID:?Set SIMKL_CLIENT_ID in .env}
+      SIMKL_CLIENT_SECRET: ${SIMKL_CLIENT_SECRET:?Set SIMKL_CLIENT_SECRET in .env}
+
+volumes:
+  addon-data:
+
+networks:
+  default:
+    external: true
+    name: courter
