@@ -14,3 +14,8 @@ services:
 
 volumes:
   addon-data:
+
+networks:
+  default:
+    external: true
+    name: courter
