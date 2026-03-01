@@ -19,20 +19,30 @@ Stremio plays content
 
 | Requirement | Notes |
 |---|---|
-| Node.js ≥ 18 | Needs native `fetch` |
 | A Simkl account | Free at simkl.com |
 | A Simkl OAuth app | Create at <https://simkl.com/settings/developer/> |
+| Docker + Docker Compose | For the Docker path |
+| Node.js ≥ 18 | For the bare-metal path only |
 
 Set the **Redirect URI** in your Simkl app to `<BASE_URL>/auth/callback`.
 
-### 2 – Configure the server
+### 2 – Configure credentials
 
 ```sh
 cp .env.example .env
 # Fill in SIMKL_CLIENT_ID, SIMKL_CLIENT_SECRET, BASE_URL
 ```
 
-### 3 – Run
+### 3a – Run with Docker (recommended)
+
+```sh
+docker compose up -d
+```
+
+Token data is stored in the `addon-data` Docker volume and survives container
+restarts and image rebuilds.
+
+### 3b – Run without Docker
 
 ```sh
 npm install
@@ -58,10 +68,13 @@ Your actual Simkl credentials are stored only on the server side.
 | `SIMKL_CLIENT_SECRET` | – | Simkl OAuth app client secret |
 | `BASE_URL` | `http://localhost:7000` | Public URL of this server (no trailing slash) |
 | `PORT` | `7000` | Port to listen on |
+| `DATA_DIR` | app root | Directory where `tokens.json` is written (set to `/data` inside Docker) |
 
 ## File structure
 
 ```
+├── Dockerfile
+├── docker-compose.yml
 ├── index.js          Main Express server (OAuth routes + Stremio addon routes)
 ├── simkl.js          Simkl API client (OAuth, sync/history)
 ├── db.js             JSON-file token store (addon token → Simkl access token)

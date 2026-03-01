@@ -18,7 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const DB_FILE = path.join(__dirname, 'tokens.json');
+const DB_FILE = path.join(process.env.DATA_DIR || __dirname, 'tokens.json');
 
 function load() {
   try {
