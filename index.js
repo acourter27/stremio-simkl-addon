@@ -166,6 +166,17 @@ app.get('/auth/callback', async (req, res) => {
 
 const addonRouter = express.Router({ mergeParams: true });
 
+/** Configure – Stremio links here when the user clicks "Configure" on an installed addon. */
+addonRouter.get('/configure', (req, res) => {
+  const record = db.getRecord(req.params.token);
+  if (!record) return res.redirect('/configure');
+
+  const manifestUrl = `${BASE_URL}/${req.params.token}/manifest.json`;
+  res.redirect(
+    `/configure?success=1&manifest=${encodeURIComponent(manifestUrl)}&user=${encodeURIComponent(record.simklUser)}`,
+  );
+});
+
 /** Manifest – identical for every user; token is only in the URL path. */
 addonRouter.get('/manifest.json', (req, res) => {
   // Validate that the token exists so unknown tokens get an early 404
