@@ -65,9 +65,12 @@ const MANIFEST = {
   description:
     'Automatically marks movies and episodes as watched on Simkl when you play them in Stremio.',
   logo: 'https://simkl.in/img/simkl/facebook-logo.png',
-  // We register as a subtitle provider – the empty response causes no UX
-  // disruption while letting us intercept every play event.
-  resources: ['subtitles'],
+  // We register as both a subtitle and streams provider. Stremio fetches
+  // streams before handing off to any external player (e.g. Infuse), so the
+  // streams hook fires even when Stremio's own player never starts. The
+  // subtitle hook remains as the signal for Stremio's internal player. Both
+  // return empty responses so they cause no UX disruption.
+  resources: ['subtitles', 'streams'],
   types: ['movie', 'series'],
   // Only engage for IMDB-prefixed IDs (tt…)
   idPrefixes: ['tt'],
@@ -207,11 +210,49 @@ addonRouter.get('/subtitles/:type/:id/:extra?.json', (req, res) => {
   );
 });
 
+/**
+ * Streams handler.
+ *
+ * Stremio calls this endpoint right when the user initiates playback,
+ * regardless of whether Stremio's internal player or an external player
+ * (e.g. Infuse) will handle the stream. By registering here we capture
+ * play events that would otherwise be invisible to the subtitle hook when
+ * an external player is in use.
+ *
+ * We return an empty list so we never interfere with other stream addons.
+ */
+addonRouter.get('/streams/:type/:id/:extra?.json', (req, res) => {
+  res.json({ streams: [] });
+
+  syncToSimkl(req.params).catch((err) =>
+    console.error('[sync error]', err.message),
+  );
+});
+
 app.use('/:token', addonRouter);
 
 // ─── Sync logic ───────────────────────────────────────────────────────────────
 
+// Deduplication: when using Stremio's internal player, both the streams
+// endpoint and the subtitle endpoint fire for the same piece of content within
+// seconds of each other. Track recent scrobbles so the second call is ignored.
+const recentScrobbles = new Map();
+const DEDUP_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+
+function isDuplicate(token, type, id) {
+  const key = `${token}:${type}:${id}`;
+  const last = recentScrobbles.get(key);
+  if (last && Date.now() - last < DEDUP_WINDOW_MS) return true;
+  recentScrobbles.set(key, Date.now());
+  return false;
+}
+
 async function syncToSimkl({ token, type, id }) {
+  if (isDuplicate(token, type, id)) {
+    console.log(`[sync] Skipping duplicate scrobble for ${type} ${id}`);
+    return;
+  }
+
   const record = db.getRecord(token);
   if (!record) {
     console.warn(`[sync] Unknown token: ${token}`);
