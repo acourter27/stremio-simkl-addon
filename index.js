@@ -60,7 +60,7 @@ const BASE_URL = (process.env.BASE_URL || `http://localhost:${PORT}`).replace(/\
 
 const MANIFEST = {
   id: 'community.stremio-simkl-sync',
-  version: '1.0.0',
+  version: '1.0.3',
   name: 'Simkl Sync',
   description:
     'Automatically marks movies and episodes as watched on Simkl when you play them in Stremio.',
@@ -201,10 +201,9 @@ addonRouter.get('/manifest.json', (req, res) => {
  * background so playback is never delayed by network latency.
  */
 addonRouter.get('/subtitles/:type/:id/:extra?.json', (req, res) => {
-  // Respond to Stremio immediately – don't block playback
+  console.log(`[subtitles] ${req.params.type} ${req.params.id}`);
   res.json({ subtitles: [] });
 
-  // Fire-and-forget sync
   syncToSimkl(req.params).catch((err) =>
     console.error('[sync error]', err.message),
   );
@@ -222,6 +221,7 @@ addonRouter.get('/subtitles/:type/:id/:extra?.json', (req, res) => {
  * We return an empty list so we never interfere with other stream addons.
  */
 addonRouter.get('/stream/:type/:id/:extra?.json', (req, res) => {
+  console.log(`[stream] ${req.params.type} ${req.params.id}`);
   res.json({ streams: [] });
 
   syncToSimkl(req.params).catch((err) =>
