@@ -74,7 +74,7 @@ const MANIFEST = {
   catalogs: [],
   behaviorHints: {
     configurable: true,
-    configurationRequired: true,
+    configurationRequired: false,
   },
 };
 
